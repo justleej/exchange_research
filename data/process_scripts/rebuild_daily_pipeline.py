@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-BASE_DIR = Path("/Applications/dollar_price")
+BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = BASE_DIR / "data"
 
 DATE_COL_PATTERN = re.compile(r"^\d{4}/\d{2}(/\d{2})?$")

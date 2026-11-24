@@ -9,3 +9,8 @@ xgboost
 torch
 scipy
 PyMuPDF
+
+python-dotenv
+yfinance
+requests
+Pillow

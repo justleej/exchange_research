@@ -1,8 +1,9 @@
+from pathlib import Path
 import pandas as pd
 import os
 
 # 파일 경로 설정
-base_dir = '/Applications/dollar_price'
+base_dir = str(Path(__file__).resolve().parents[2])
 source_file = os.path.join(base_dir, 'exchange_rate/주요국 통화의 대원화환율_13193422.csv')
 output_file = os.path.join(base_dir, 'exchange_rate/exchange_rate_processed.csv')
 

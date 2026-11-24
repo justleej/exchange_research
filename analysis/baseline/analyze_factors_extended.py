@@ -7,7 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 
-BASE_DIR = Path("/Applications/dollar_price")
+BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_PATH = BASE_DIR / "data" / "processed_daily_1995_2026_integrated.csv"
 PERIOD_PATH = BASE_DIR / "analysis" / "anomaly" / "period_definition.json"
 OUT_DIR = BASE_DIR / "analysis" / "baseline" / "extended_results"

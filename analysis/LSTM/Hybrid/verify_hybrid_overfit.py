@@ -11,7 +11,7 @@ from statsmodels.stats.diagnostic import acorr_ljungbox
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
-sys.path.append("/Applications/dollar_price")
+sys.path.append(str(Path(__file__).resolve().parents[3]))
 
 target_type = sys.argv[1] if len(sys.argv) > 1 else 'mmf'
 

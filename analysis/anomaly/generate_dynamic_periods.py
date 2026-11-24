@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-BASE_DIR = Path("/Applications/dollar_price")
+BASE_DIR = Path(__file__).resolve().parents[2]
 OUTPUT_PATH = BASE_DIR / "analysis" / "anomaly" / "dynamic_periods.json"
 
 ROLLING_WINDOW = 30

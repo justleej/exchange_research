@@ -1,7 +1,8 @@
+from pathlib import Path
 import pandas as pd
 import os
 
-base_dir = '/Applications/dollar_price'
+base_dir = str(Path(__file__).resolve().parents[2])
 
 # 처리할 작업 목록 정의
 tasks = [

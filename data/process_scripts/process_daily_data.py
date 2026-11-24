@@ -1,8 +1,9 @@
+from pathlib import Path
 import pandas as pd
 import os
 import io
 
-base_dir = '/Applications/dollar_price'
+base_dir = str(Path(__file__).resolve().parents[2])
 
 def clean_numeric(series):
     # Convert series to string, handle potential weird representations, remove commas

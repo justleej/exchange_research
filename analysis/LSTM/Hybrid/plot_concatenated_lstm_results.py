@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
-BASE_DIR = Path("/Applications/dollar_price")
+BASE_DIR = Path(__file__).resolve().parents[3]
 LSTM_DIR = BASE_DIR / "analysis" / "LSTM" / "Hybrid"
 
 MODELS = [

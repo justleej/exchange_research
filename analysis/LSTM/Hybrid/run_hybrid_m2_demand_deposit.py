@@ -19,7 +19,7 @@ torch.manual_seed(42)
 np.random.seed(42)
 torch.set_num_threads(1)
 
-BASE_DIR = Path("/Applications/dollar_price")
+BASE_DIR = Path(__file__).resolve().parents[3]
 OUTPUT_DIR = BASE_DIR / "analysis" / "LSTM" / "Hybrid" / "hybrid_m2"
 DATA_PATH = BASE_DIR / "analysis" / "LSTM" / "lstm_m2_demand_deposit" / "daily_dataset_m2_demand_deposit.csv"
 PERIOD_DEF_PATH = BASE_DIR / "analysis" / "anomaly" / "period_definition.json"

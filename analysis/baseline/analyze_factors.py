@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,7 +16,7 @@ elif platform.system() == 'Windows':
 plt.rcParams['axes.unicode_minus'] = False
 
 def load_data():
-    base_path = '/Applications/dollar_price'
+    base_path = str(Path(__file__).resolve().parents[2])
     files = {
         'USD_KRW': 'exchange_rate/exchange_rate_processed.csv',
         'SPREAD_POLICY': 'policy_rate/spread_KOR_USA_processed.csv',

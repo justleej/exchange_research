@@ -51,7 +51,7 @@ parser.add_argument(
 args = parser.parse_args()
 target_type = args.target
 
-BASE_DIR = Path("/Applications/dollar_price")
+BASE_DIR = Path(__file__).resolve().parents[3]
 PERIOD_DEF_PATH = BASE_DIR / "analysis" / "anomaly" / "period_definition.json"
 
 if target_type == "m2":

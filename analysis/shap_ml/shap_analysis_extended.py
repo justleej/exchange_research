@@ -7,7 +7,7 @@ import pandas as pd
 import shap
 from sklearn.ensemble import RandomForestRegressor
 
-BASE_DIR = Path("/Applications/dollar_price")
+BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_PATH = BASE_DIR / "data" / "processed_daily_1995_2026_integrated.csv"
 PERIOD_PATH = BASE_DIR / "analysis" / "anomaly" / "period_definition.json"
 

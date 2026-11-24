@@ -18,7 +18,7 @@ elif platform.system() == 'Windows':
 plt.rcParams['axes.unicode_minus'] = False
 
 def load_data():
-    base_path = '/Applications/dollar_price'
+    base_path = str(Path(__file__).resolve().parents[2])
     files = {
         'USD_KRW': 'data/exchange_rate/exchange_rate_processed.csv',
         'SPREAD_POLICY': 'data/policy_rate/spread_KOR_USA_processed.csv',
@@ -67,7 +67,7 @@ def analyze_shap_drivers(df):
         'IPI_KOR', 'IPI_USA'
     ]
     
-    period_path = Path('/Applications/dollar_price/analysis/anomaly/dynamic_periods.json')
+    period_path = Path(__file__).resolve().parents[2] / "analysis/anomaly/dynamic_periods.json"
     with open(period_path, 'r', encoding='utf-8') as f:
         period_info = json.load(f)
 

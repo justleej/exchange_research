@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
@@ -6,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 import seaborn as sns
 
-base_dir = '/Applications/dollar_price'
+base_dir = str(Path(__file__).resolve().parents[2])
 
 def analyze():
     import matplotlib

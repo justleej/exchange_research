@@ -1,9 +1,10 @@
+from pathlib import Path
 import yfinance as yf
 import pandas as pd
 import os
 
 # Set output path
-output_dir = '/Applications/dollar_price/data/KOSPI/'
+output_dir = str(Path(__file__).resolve().parents[2] / "data/KOSPI/")
 os.makedirs(output_dir, exist_ok=True)
 output_path = os.path.join(output_dir, 'KOSPI_processed.csv')
 

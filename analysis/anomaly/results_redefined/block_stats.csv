@@ -1,0 +1,4 @@
+definition,days,blocks,median_len,blocks_ge30,share_2024-11+
+A_not_traditional(rc>-0.2),7194,486,2.0,87,0.061
+B_uncorrelated(|rc|<0.2),3723,405,5.0,18,0.081
+C_wrong_sign(rc>=0.2),3471,465,2.0,27,0.04

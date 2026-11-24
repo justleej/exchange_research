@@ -1,3 +1,4 @@
+from pathlib import Path
 import requests
 import pandas as pd
 import os
@@ -10,7 +11,7 @@ API_KEY = os.getenv('ECOS_API_KEY')
 SERVICE_URL = 'https://ecos.bok.or.kr/api/StatisticSearch/API_KEY/json/kr/1/10000/901Y144/'
 
 # Output paths
-output_path = '/Applications/dollar_price/data/CPI/KOR/ECOS_KOR_CPI_processed.csv'
+output_path = str(Path(__file__).resolve().parents[2] / "data/CPI/KOR/ECOS_KOR_CPI_processed.csv")
 os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
 def fetch_cpi():

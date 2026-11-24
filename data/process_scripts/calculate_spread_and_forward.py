@@ -1,8 +1,9 @@
+from pathlib import Path
 import pandas as pd
 import os
 
 # 파일 경로 설정
-base_path = '/Applications/dollar_price'
+base_path = str(Path(__file__).resolve().parents[2])
 file_paths = {
     'exchange': os.path.join(base_path, 'data/exchange_rate/USD_KRW_processed.csv'),
     'base_rate_kor': os.path.join(base_path, 'data/policy_rate/KOR/base_rate_KOR_processed.csv'),

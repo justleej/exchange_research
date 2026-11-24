@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,7 +15,7 @@ elif platform.system() == 'Windows':
     rc('font', family='Malgun Gothic')
 plt.rcParams['axes.unicode_minus'] = False
 
-base_dir = '/Applications/dollar_price'
+base_dir = str(Path(__file__).resolve().parents[2])
 
 def analyze_daily_shap():
     # Load dataset
