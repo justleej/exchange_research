@@ -1,0 +1,5 @@
+definition,flagged_months,panel_months,panel_rows
+legacy,93,68,2937
+A_not_traditional(rc>-0.2),239,194,8730
+B_uncorrelated(|rc|<0.2),104,85,3822
+C_wrong_sign(rc>=0.2),92,72,3250
