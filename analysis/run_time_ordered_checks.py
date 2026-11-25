@@ -78,22 +78,26 @@ def lstm(fx):
                         "actual": frame.fx.iloc[test + horizon].to_numpy(),
                         "last_fx": frame.fx.iloc[test].to_numpy()})
     for name, columns in (("baseline", ["fx", "spread"]), ("plus_mmf", ["fx", "spread", "mmf"])):
-        torch.manual_seed(42)
-        scaler = StandardScaler().fit(frame[columns].iloc[:cutoff].dropna())
-        z = scaler.transform(frame[columns])
-
-        def windows(indices):
-            return torch.tensor(np.stack([z[i - length + 1:i + 1] for i in indices]),
-                                dtype=torch.float32)
-
-        y = torch.tensor(z[train + horizon, :1], dtype=torch.float32)
-        model = ExRateLSTM(len(columns), 32, 1)
-        loader = DataLoader(TensorDataset(windows(train), y), batch_size=32, shuffle=True)
-        train_model(model, loader, torch.nn.MSELoss(), torch.optim.Adam(model.parameters(), lr=0.005), 50)
-        model.eval()
-        with torch.no_grad():
-            out[name] = model(windows(test)).numpy().ravel() * scaler.scale_[0] + scaler.mean_[0]
+        out[name] = fit_lstm(frame, columns, train, test, cutoff, length, horizon, 42)
     save_lstm_results(out, frame.spread, len(train), dates[cutoff])
+
+
+def fit_lstm(frame, columns, train, test, cutoff, length, horizon, seed):
+    torch.manual_seed(seed)
+    scaler = StandardScaler().fit(frame[columns].iloc[:cutoff].dropna())
+    z = scaler.transform(frame[columns])
+
+    def windows(indices):
+        return torch.tensor(np.stack([z[i - length + 1:i + 1] for i in indices]),
+                            dtype=torch.float32)
+
+    y = torch.tensor(z[train + horizon, :1], dtype=torch.float32)
+    model = ExRateLSTM(len(columns), 32, 1)
+    loader = DataLoader(TensorDataset(windows(train), y), batch_size=32, shuffle=True)
+    train_model(model, loader, torch.nn.MSELoss(), torch.optim.Adam(model.parameters(), lr=0.005), 50)
+    model.eval()
+    with torch.no_grad():
+        return model(windows(test)).numpy().ravel() * scaler.scale_[0] + scaler.mean_[0]
 
 
 def save_lstm_results(out, spread, n_train, cutoff):

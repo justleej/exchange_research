@@ -98,6 +98,19 @@ class TargetTransform:
     unit_label: str
 
 
+def configure_output(output_dir: Path) -> None:
+    global FX_IMPACT_DIR, REPORT_DIR, TARGET_REPORT_DIR, FX_MODEL_REPORT_DIR
+    global FINAL_REPORT_DIR, ANOMALY_SET_REPORT_DIR, EVENT_PANEL_REPORT_DIR, EVENT_PANEL_PLOT_DIR
+    FX_IMPACT_DIR = output_dir.resolve()
+    REPORT_DIR = FX_IMPACT_DIR / "reports"
+    TARGET_REPORT_DIR = REPORT_DIR / "target_selection"
+    FX_MODEL_REPORT_DIR = REPORT_DIR / "fx_model_selection"
+    FINAL_REPORT_DIR = REPORT_DIR / "final"
+    ANOMALY_SET_REPORT_DIR = FINAL_REPORT_DIR / "anomaly_set"
+    EVENT_PANEL_REPORT_DIR = FINAL_REPORT_DIR / "event_panel"
+    EVENT_PANEL_PLOT_DIR = EVENT_PANEL_REPORT_DIR / "plots"
+
+
 def ensure_dirs() -> None:
     for path in [
         TARGET_REPORT_DIR,
@@ -2873,6 +2886,7 @@ def write_event_panel_result_md(
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the final USD/KRW FX impact modeling pipeline.")
+    parser.add_argument("--output-dir", type=Path, help="Write regenerated reports outside the default directory.")
     parser.add_argument("--macro-path", type=Path, default=MACRO_PATH)
     parser.add_argument("--period-definition", type=Path, default=PERIOD_DEF_PATH)
     parser.add_argument("--scenario-shock-pct", type=float, default=0.05)
@@ -2883,6 +2897,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    if args.output_dir is not None:
+        configure_output(args.output_dir)
     ensure_dirs()
     macro_df = load_macro_dataset(args.macro_path)
     _ = load_period_definition(args.period_definition)
@@ -2934,7 +2950,7 @@ def main() -> None:
         f"{event_panel['event_date'].nunique() if not event_panel.empty else 0} anomaly event months, "
         f"{len(event_metrics)} metric rows."
     )
-    print(f"Reports saved under {REPORT_DIR.relative_to(BASE_DIR)}")
+    print(f"Reports saved under {REPORT_DIR}")
 
 
 if __name__ == "__main__":
