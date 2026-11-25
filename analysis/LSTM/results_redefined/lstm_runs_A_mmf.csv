@@ -1,0 +1,2 @@
+variant,definition,seed,train_rows,blocks,rmse_A,rmse_B,mae_A,mae_B,sec
+mmf,A,42,2981,424,16.50081150419501,22.723537414606312,13.901631580948536,19.54041484294561,3680

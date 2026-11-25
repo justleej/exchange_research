@@ -1,0 +1,2 @@
+variant,definition,blocks,rmse_A,rmse_B,gain_mean,gain_sd,B_better,runs
+mmf,orig,546,15.64,15.37,0.27,,1,1
