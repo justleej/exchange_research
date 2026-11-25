@@ -47,7 +47,7 @@ def threshold_checks():
     print(result.to_string(index=False), flush=True)
 
 
-def event_checks():
+def event_panels():
     macro = lp.load_macro_dataset()
     reports = lp.REPORT_DIR
     ranking = pd.read_csv(reports / "target_selection/target_ranking.csv")
@@ -62,11 +62,16 @@ def event_checks():
     for name, rule in DEFS.items():
         fraction = rule(corr[valid]).groupby(months[valid]).mean()
         masks[name] = macro.Date.dt.to_period("M").map(fraction).ge(0.5)
-    rows, counts = [], []
     for name, mask in masks.items():
         panel = lp.build_event_time_panel(
             macro.assign(Is_Abnormal_Period=mask.astype(int)), targets, predictions, source, 0.05
         )
+        yield name, mask, panel
+
+
+def event_checks():
+    rows, counts = [], []
+    for name, mask, panel in event_panels():
         counts.append(dict(definition=name, flagged_months=int(mask.sum()),
                            panel_months=panel.event_date.nunique() if not panel.empty else 0,
                            panel_rows=len(panel)))
