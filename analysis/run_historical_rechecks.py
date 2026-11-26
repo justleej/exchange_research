@@ -47,11 +47,11 @@ def threshold_checks():
     print(result.to_string(index=False), flush=True)
 
 
-def event_panels():
+def event_panels(targets=None):
     macro = lp.load_macro_dataset()
     reports = lp.REPORT_DIR
     ranking = pd.read_csv(reports / "target_selection/target_ranking.csv")
-    targets = ranking.loc[ranking.selected_for_final_model, "target"].tolist()
+    targets = targets or ranking.loc[ranking.selected_for_final_model, "target"].tolist()
     predictions = pd.read_csv(reports / "fx_model_selection/selected_fx_predictions.csv", parse_dates=["date"])
     source = predictions.source_model.iloc[0]
     daily = pd.read_csv(DATA, parse_dates=["date"]).sort_values("date")

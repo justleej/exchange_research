@@ -124,3 +124,11 @@ lift는 연구 동기 기간(2024-11 ~ 2025-12)에서 레짐 비율을 전체 �
 - 정상화 설정 10시드(`run_liquidity_lstm_stationary.py`): 기본 16.62, 수시입출식 17.29, MMF 17.41, 마지막 환율 유지 16.08. DM 검정에서 유동성 추가는 기본과 유의한 차이가 없다(p=0.71, 0.42).
 - 시간순 Hybrid 축소판 10시드(`run_hybrid_time_ordered.py`): ARIMA 16.17, Hybrid 기본 16.91, +수시입출식 17.33, +MMF 17.78. 유동성 추가의 개선은 없다.
 - `analysis/dm_test.py`는 제곱오차 손실, HAC lag 4와 소표본 보정을 쓴다. 한계는 하이퍼파라미터 미튜닝, Hybrid의 하이퍼파라미터 탐색과 CNN-LSTM 생략이다.
+
+## 10. 4단계: 파급효과 추론 보강
+`analysis/run_event_inference_robust.py` -> `analysis/results_historical_rechecks/event_inference_robust.csv`, `event_inference_summary.csv`
+
+- 대상 8개 고정, 공통 구간 2008-01 ~ 2025-11, 분할 없이 전체 추정. 군집은 달력상 이벤트 월 간격이 horizon개월을 넘으면 새로 나눈 에피소드이고, 군집 5개 미만이면 추정하지 않는다.
+- 기존 이벤트 표시는 에피소드가 3개뿐이라 군집 추정이 불가능하다. A는 48셀 중 16셀만 추정된다.
+- 192개 검정 Holm 보정 후 유의한 계수: 기존 HAC 사양 기준 20개(기존 11 + A 4 + B 1 + C 4), 군집 표준오차에서는 1개(A), 글로벌 요인(DXY, VIX, WTI, 미국 정책금리) 통제 후에는 0개.
+- 한계: 통제 변수는 관측 가능한 요인뿐이라 구조적 식별이 아니다. 이벤트 월 선택 자체가 환율-금리차 상관 정의에 의존한다.

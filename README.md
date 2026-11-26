@@ -396,6 +396,23 @@ ARIMA 단독은 마지막 환율 유지보다 통계적으로 약간 나빴다(D
 
 재현 명령은 `python analysis/run_event_common_window.py`다. [공통 기간 결과 CSV](analysis/results_historical_rechecks/event_common_window.csv)
 
+### 군집 표준오차와 글로벌 요인 통제
+
+기존 HAC가 이벤트 관측 순서에 적용돼 월 간격을 무시하고, 환율 충격을 식별하지 않은 점을 보강했다(`python analysis/run_event_inference_robust.py`). 대상 변수는 기존 8개(`CSI_CCSI`, `Imports`, `KOSPI`, `Industrial_Production`, `Import_Price_Index`, `Foreign_Bond_Investment`, `Foreign_Stock_Investment`, `Trade_Balance`)로 고정했고, 분할 없이 공통 달력 구간(2008-01 ~ 2025-11) 전체로 환율 충격 계수를 추정했다. 이벤트 월 간격이 horizon개월을 넘으면 새 군집으로 나누는 에피소드 군집 표준오차(t 분포, 군집 5개 미만이면 추정 보류)를 쓰고, DXY, VIX, WTI 유가, 미국 정책금리 변화를 통제한 사양을 추가했다. 사양별 계획된 검정 192개를 하나의 군으로 Holm 보정했다.
+
+| 이벤트 월 정의 | 기존 HAC 개별 p<0.05 / Holm | 군집 표준오차 개별 / Holm (추정 셀) | 글로벌 요인 통제 개별 / Holm |
+| --- | ---: | ---: | ---: |
+| 기존 표시 | 29 / 11 | 추정 불가 (군집 3개) | 추정 불가 |
+| A | 23 / 4 | 8 / 1 (16셀) | 2 / 0 (16셀) |
+| B | 6 / 1 | 4 / 0 (48셀) | 1 / 0 (48셀) |
+| C | 17 / 4 | 12 / 0 (48셀) | 6 / 0 (48셀) |
+
+- 기존 이벤트 표시(`Is_Abnormal_Period`)는 이벤트 월이 소수의 긴 연속 구간에 몰려 있어 에피소드가 3개뿐이다. 이 정의의 유의한 계수 11개는 군집 추정으로 확인할 수 없다.
+- A에서는 horizon이 길어지면 에피소드가 하나로 합쳐져 군집 5개 미만이 되는 셀이 많아 48셀 중 16셀만 추정됐다.
+- 소비자심리지수 1개월 계수는 추정된 모든 경우에서 음수였다. 그러나 군집 표준오차의 Holm 보정 p는 A 0.0015(통제 시 0.41), B 0.17, C 0.20이고 글로벌 요인을 통제하면 어느 정의에서도 5%를 충족하지 않았다.
+- 따라서 환율 충격 이후 반응에서 일관되게 남는 결과는 없다. 이전 절의 "소비자심리 1개월 계수가 모두 유의"라는 서술은 이 보강에서 유지되지 않는다. 글로벌 요인 통제는 관측 가능한 요인만 걷어낸 것이어서 구조적 식별이 아니다.
+- 이벤트 월 선택은 여전히 환율과 금리차 상관에 기대고, 환율 충격 계수는 실제 환율 월 변화율이다. 결과는 [robust 결과 CSV](analysis/results_historical_rechecks/event_inference_robust.csv)와 [요약 CSV](analysis/results_historical_rechecks/event_inference_summary.csv)에 있다.
+
 ### 전체 파급효과 파이프라인 재실행
 
 거시 대상 재선정, 저장된 환율 예측 경로 비교, 달력 시점 모형, 이벤트 시점 local projection까지 네 단계를 실행했다. 이벤트 월은 기존 거시 데이터의 월 표시를 사용했다. 새 이벤트 정의에 대한 민감도는 위의 별도 OLS 검증에 정리했다.

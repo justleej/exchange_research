@@ -1,0 +1,13 @@
+spec,definition,cells,estimated,nominal,holm,median_clusters
+base_cluster,A_not_traditional(rc>-0.2),48,16,8,1,2.5
+base_cluster,B_uncorrelated(|rc|<0.2),48,48,4,0,14.0
+base_cluster,C_wrong_sign(rc>=0.2),48,48,12,0,15.0
+base_cluster,legacy,48,0,0,0,3.0
+base_hac_event_order,A_not_traditional(rc>-0.2),48,48,23,4,0.0
+base_hac_event_order,B_uncorrelated(|rc|<0.2),48,48,6,1,0.0
+base_hac_event_order,C_wrong_sign(rc>=0.2),48,48,17,4,0.0
+base_hac_event_order,legacy,48,48,29,11,0.0
+controls_cluster,A_not_traditional(rc>-0.2),48,16,2,0,2.5
+controls_cluster,B_uncorrelated(|rc|<0.2),48,48,1,0,14.0
+controls_cluster,C_wrong_sign(rc>=0.2),48,48,6,0,15.0
+controls_cluster,legacy,48,0,0,0,3.0
