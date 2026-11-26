@@ -82,7 +82,8 @@ def lstm(fx):
     save_lstm_results(out, frame.spread, len(train), dates[cutoff])
 
 
-def fit_lstm(frame, columns, train, test, cutoff, length, horizon, seed):
+def fit_lstm(frame, columns, train, test, cutoff, length, horizon, seed, target="level"):
+    # target="change": 현재 환율 대비 horizon일 뒤 변화량을 예측하고 현재 환율에 더한다(수준 외삽 회피).
     torch.manual_seed(seed)
     scaler = StandardScaler().fit(frame[columns].iloc[:cutoff].dropna())
     z = scaler.transform(frame[columns])
@@ -91,13 +92,15 @@ def fit_lstm(frame, columns, train, test, cutoff, length, horizon, seed):
         return torch.tensor(np.stack([z[i - length + 1:i + 1] for i in indices]),
                             dtype=torch.float32)
 
-    y = torch.tensor(z[train + horizon, :1], dtype=torch.float32)
+    base = z[:, :1]
+    y = torch.tensor(z[train + horizon, :1] - (base[train] if target == "change" else 0), dtype=torch.float32)
     model = ExRateLSTM(len(columns), 32, 1)
     loader = DataLoader(TensorDataset(windows(train), y), batch_size=32, shuffle=True)
     train_model(model, loader, torch.nn.MSELoss(), torch.optim.Adam(model.parameters(), lr=0.005), 50)
     model.eval()
     with torch.no_grad():
-        return model(windows(test)).numpy().ravel() * scaler.scale_[0] + scaler.mean_[0]
+        pred = model(windows(test)).numpy() + (base[test] if target == "change" else 0)
+        return pred.ravel() * scaler.scale_[0] + scaler.mean_[0]
 
 
 def save_lstm_results(out, spread, n_train, cutoff):

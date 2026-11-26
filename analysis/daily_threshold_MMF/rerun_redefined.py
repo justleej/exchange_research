@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT / "data" / "process_scripts"))
 import rerun_redefined as rr  # noqa: E402  (DEFS, build_blocks, WINDOW 재사용)
 
 OUT = Path(__file__).resolve().parent / "results_redefined"
-BOOT = 300
+BOOT = int(sys.argv[1]) if len(sys.argv) > 1 else 300  # 부트스트랩 횟수
 rng = np.random.default_rng(42)
 
 

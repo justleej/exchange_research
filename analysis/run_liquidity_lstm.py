@@ -1,10 +1,15 @@
 """Compare liquidity features on the same chronological FX test observations."""
+import sys
+
 import numpy as np
 import pandas as pd
 
 from run_time_ordered_checks import OUT, fit_lstm, lstm_inputs, series
 
-SEEDS = (42, 43, 44)
+# `python run_liquidity_lstm.py 42 43 ... 51` 처럼 시드 인자를 늘리면 결과는 _s<개수> 접미사 파일로 저장해 기존 3시드 결과를 보존한다.
+_env = (",".join(sys.argv[1:]) or None)
+SEEDS = tuple(int(x) for x in _env.split(",")) if _env else (42, 43, 44)
+TAG = f"_s{len(SEEDS)}" if _env else ""
 MODELS = {
     "baseline": ["fx", "spread"],
     "plus_mmf": ["fx", "spread", "mmf"],
@@ -66,10 +71,10 @@ def main():
                                       - np.sqrt(np.mean(errors[reference] ** 2)),
                                       ci_low=low, ci_high=high, block_size=20))
     OUT.mkdir(exist_ok=True)
-    out.to_csv(OUT / "liquidity_lstm_predictions.csv", index=False)
+    out.to_csv(OUT / f"liquidity_lstm_predictions{TAG}.csv", index=False)
     result = pd.DataFrame(metrics)
-    result.to_csv(OUT / "liquidity_lstm_metrics.csv", index=False)
-    pd.DataFrame(intervals).to_csv(OUT / "liquidity_lstm_paired_intervals.csv", index=False)
+    result.to_csv(OUT / f"liquidity_lstm_metrics{TAG}.csv", index=False)
+    pd.DataFrame(intervals).to_csv(OUT / f"liquidity_lstm_paired_intervals{TAG}.csv", index=False)
     print(result.groupby("model").rmse.agg(["mean", "std"]).to_string(), flush=True)
 
 
