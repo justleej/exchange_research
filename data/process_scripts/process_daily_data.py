@@ -120,7 +120,10 @@ if __name__ == "__main__":
     
     er_df = process_exchange_rate()
     print("ER shape:", er_df.shape)
-    
+    if er_df.empty:
+        # 원본(환율_일별.csv)이 없거나 파싱 실패 시 기존 USD_KRW_processed.csv를 빈 파일로 덮어쓰지 않는다.
+        raise SystemExit("환율 데이터가 비어 있어 저장을 중단했다. 기존 USD_KRW_processed.csv는 그대로 둔다.")
+
     # 가공된 환율 데이터 개별 저장
     er_out_path = os.path.join(base_dir, 'data/exchange_rate/USD_KRW_processed.csv')
     er_df.to_csv(er_out_path, index=False)
