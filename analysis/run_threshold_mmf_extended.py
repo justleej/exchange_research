@@ -4,7 +4,8 @@
 부트스트랩 sup-F 검정(analysis/daily_threshold_MMF/rerun_redefined.py의 sup_f)을 쓴다. 표본 세 가지를 비교한다:
 2015-12 이후(기존 프록시와 비교), 2006-04 이후 전체, 2006-04~2015-11(이전 구간).
 임계값 초과 빈도는 고정기간, 재정의 A/B/C, 사전지정 위기 구간 안과 밖을 Fisher 검정으로 비교한다.
-사용: python analysis/run_threshold_mmf_extended.py [부트스트랩 횟수, 기본 1000] [pct]
+사용: python analysis/run_threshold_mmf_extended.py [부트스트랩 횟수, 기본 1000] [pct] [proxy]
+"proxy"를 주면 MMF 단독 대신 초기 분석과 같은 프록시(CMA+MMF)를 쓴다. 일별 CMA는 2009-01부터 있어 그 이후만 쓴다.
 "pct"를 주면 절대 변화량(십억원, 원) 대신 로그 변화율(%)을 쓴다. MMF 잔액이 2006년 약 70조원에서 2026년 약 280조원으로 커져
 절대 임계값은 최근 기간에 기계적으로 더 자주 넘어가므로 pct가 규모 효과를 제거한 사양이다.
 결과: analysis/results_power_regimes/threshold_mmf_extended[_pct].csv, threshold_mmf_breach[_pct].csv
@@ -23,8 +24,10 @@ from run_time_ordered_checks import DATA, series
 OUT = DATA.parent / "analysis" / "results_power_regimes"
 BOOT = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
 FIXED = ("2024-11-01", "2025-12-31")
-PCT = len(sys.argv) > 2 and sys.argv[2] == "pct"
-SUFFIX = "_pct" if PCT else ""
+PCT = "pct" in sys.argv[2:]
+PROXY = "proxy" in sys.argv[2:]
+SUFFIX = ("_proxy" if PROXY else "") + ("_pct" if PCT else "")
+NAME = "프록시(CMA+MMF)" if PROXY else "MMF"
 
 
 def load():
@@ -32,6 +35,13 @@ def load():
     mmf = pd.read_csv(DATA / "m2/KOR/MMF/MMF_daily_2006_2026.csv", skiprows=4, header=None, usecols=[0, 1],
                       names=["date", "mmf"], thousands=",")
     mmf = mmf.assign(date=pd.to_datetime(mmf.date, format="%Y/%m/%d")).set_index("date").mmf.sort_index() / 10  # 억원 -> 십억원
+    if PROXY:
+        cma = pd.read_csv(DATA / "m2/KOR/CMA/CMA_balance_2006_2026.csv", skiprows=3, header=None, thousands=",",
+                          na_values=["-"]).iloc[:, [0, 6]]
+        cma.columns = ["date", "cma"]
+        cma = cma.assign(date=pd.to_datetime(cma.date, format="%Y/%m/%d")).set_index("date").cma.sort_index() / 10  # 억원 -> 십억원
+        mmf = (mmf + cma).dropna()
+        mmf = mmf[mmf.index >= "2009-01-01"]  # 일별 CMA는 2009-01부터(그 전은 월별 또는 드문 관측)
     d = pd.concat({"fx": fx, "mmf": mmf}, axis=1).dropna()
     if PCT:
         d = np.log(d) * 100  # 로그 변화율(%)을 쓰기 위해 로그 수준으로 바꾼 뒤 차분한다
@@ -82,8 +92,9 @@ def main():
     for name, cond in DEFS.items():
         sets[name] = set(daily.loc[cond(daily.rc), "date"])
     sets["사전지정 위기 구간"] = set(d_all.date[np.logical_or.reduce([d_all.date.between(a, b) for a, b in EVENT_WINDOWS.values()])])
-    samples = {"MMF 2015-12~": d_all[d_all.date >= "2015-12-01"], "MMF 2006-04~": d_all,
-               "MMF 2006-04~2015-11": d_all[d_all.date < "2015-12-01"]}
+    first = d_all.date.min().strftime("%Y-%m")
+    samples = {f"{NAME} 2015-12~": d_all[d_all.date >= "2015-12-01"], f"{NAME} {first}~": d_all,
+               f"{NAME} {first}~2015-11": d_all[d_all.date < "2015-12-01"]}
     tests, breaches = [], []
     for label, d in samples.items():
         d = d.reset_index(drop=True)
