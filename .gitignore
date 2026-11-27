@@ -3,3 +3,7 @@
 !.env.example
 *__pycache__*
 graphify-out/
+
+# 포털에서 내려받은 원본 엑셀(재현은 CSV로 한다)
+data/m2/KOR/**/*_20*.xls
+analysis/results_walkforward/_*
