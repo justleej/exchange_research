@@ -1,0 +1,2 @@
+test,sup_wald,break_date,coef_before,coef_after,permutation_p,n
+"Quandt-Andrews sup-Wald (x 계수, h=6)",10.29,2020-12-31,-0.01345,0.01286,0.0897,313
