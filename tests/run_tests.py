@@ -151,6 +151,57 @@ def test_data_integrity():
         assert len(j) > 2000 and rel < 1e-4, f"CMA 새 자료와 기존 자료가 다르다(상대 오차 {rel:.2e})"
 
 
+def test_oos_data_matches_existing_files():
+    """새 무료 자료(ECOS 환율, 기준금리-DFF 금리차)가 기존 파일과 겹치는 날짜에서 같다. 없으면 건너뛴다."""
+    fx_p, sp_p = DATA / "oos/usd_krw_ecos_2026.csv", DATA / "oos/spread_2025_2026.csv"
+    if not (fx_p.exists() and sp_p.exists()):
+        print("  (건너뜀: data/oos 없음, data/process_scripts/fetch_oos_2026.py로 받는다)")
+        return
+    for old, new, col in (("exchange_rate/USD_KRW_processed.csv", "oos/usd_krw_ecos_2026.csv", "USD_KRW"),
+                          ("policy_rate/spread_KOR_USA_processed.csv", "oos/spread_2025_2026.csv", "RATE_SPREAD_KOR_USA")):
+        j = pd.concat([series(old, col), series(new, col)], axis=1, join="inner").dropna()
+        assert len(j) >= 10 and (j.iloc[:, 0] - j.iloc[:, 1]).abs().max() < 1e-6, f"{col}: 새 자료가 기존과 다르다"
+
+
+def test_extended_data_keeps_old_forecasts():
+    """새 자료를 이어 붙여도 기존 원점의 walk-forward 예측과 구간은 그대로여야 한다."""
+    if not (DATA / "oos/usd_krw_ecos_2026.csv").exists():
+        print("  (건너뜀: data/oos 없음)")
+        return
+    import run_hybrid_oos as ho
+
+    base = w.build_daily_frame()
+    fc0 = w.walk_forward(base)
+    fx, sp = ho.extended_inputs()
+    ext = w.build_daily_frame(fx=fx, spread=sp)
+    fc1 = w.walk_forward(ext)
+    assert len(fc1) > len(fc0)
+    for col in ("AR", "A", "B"):
+        assert np.allclose(fc0[col], fc1.loc[fc0.index, col]), f"{col}: 새 자료가 기존 예측을 바꿨다"
+    iv0 = w.intervals(base, fc0, w.regimes(base, fc0.index))
+    iv1 = w.intervals(ext, fc1, w.regimes(ext, fc1.index))
+    for col in ("sigma", "confr_hw_95"):
+        assert np.allclose(iv0[col].fillna(-1), iv1.loc[iv0.index, col].fillna(-1)), f"{col}: 새 자료가 기존 구간을 바꿨다"
+
+
+def test_hedge_rule_is_causal_and_bounded():
+    """위험 목표 헤지 비율은 0~1이고, 미래 반폭을 바꿔도 이전 값은 같다. 전부 헤지하면 손익은 캐리뿐이다."""
+    import run_hedge_simulation as hs
+
+    rng = np.random.default_rng(6)
+    hw = pd.Series(0.01 * np.exp(rng.normal(0, 0.4, 800)), index=pd.date_range("2015-01-01", periods=800, freq="B"))
+    h = hs.risk_target_h(hw)
+    assert h.dropna().between(0, 1).all()
+    hw2 = hw.copy()
+    hw2.iloc[500:] *= 3
+    assert np.allclose(h.iloc[:500].fillna(-1), hs.risk_target_h(hw2).iloc[:500].fillna(-1)), "헤지 비율이 미래 반폭에 의존한다"
+    y = pd.Series(rng.normal(0, 0.01, 50))
+    full = pd.Series(1.0, index=y.index)
+    p = hs.weekly_pnl(y, full, 0.001, 1, 0.0)
+    assert np.allclose(p, 0.001) and np.allclose(hs.weekly_pnl(y, full, 0.001, -1, 0.0), -0.001)
+    assert np.isclose(hs.weekly_pnl(y, pd.Series(0.0, index=y.index), 0.0, 1, 1e-4).sum(), y.sum())
+
+
 def slow_hybrid_walkforward_ignores_future_data():
     """Hybrid walk-forward(--slow): 앞쪽 2블록에서 원점 T 이후 자료를 흔들어도 T까지의 예측이 같아야 한다(약 3~5분)."""
     import run_hybrid_walkforward as h
