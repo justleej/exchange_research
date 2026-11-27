@@ -14,3 +14,4 @@ python-dotenv
 yfinance
 requests
 Pillow
+# xlrd  # 포털 원본 xls를 CSV로 바꿀 때만 필요(분석은 CSV만 읽는다)
