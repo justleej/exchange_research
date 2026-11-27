@@ -1,0 +1,5 @@
+extra_lag_days,total_mmf_lag_days,model,n,ratio_vs_RW,dir_acc,dir_binom_p
+1,2,ARIMA,4166,1.003,0.506,0.4478
+1,2,Hybrid+MMF,4166,1.039,0.537,1.951e-06
+4,5,ARIMA,4166,1.003,0.5058,0.4665
+4,5,Hybrid+MMF,4166,1.111,0.5036,0.6532
