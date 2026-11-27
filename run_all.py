@@ -23,7 +23,9 @@ FULL = [("검정력과 외부 기준 레짐", ["run_power_and_event_regimes.py"]
         ("임계점 프록시(CMA+MMF)", ["run_threshold_mmf_extended.py", "1000", "proxy"], ROOT / "analysis"),
         ("예측구간 민감도", ["run_interval_sensitivity.py"], ROOT / "analysis"),
         ("신호 구조변화와 메커니즘", ["run_signal_extra_checks.py"], ROOT / "analysis"),
-        ("교차통화 복제", ["run_cross_currency.py"], ROOT / "analysis")]
+        ("교차통화 복제", ["run_cross_currency.py"], ROOT / "analysis"),
+        ("모델 확장(walk-forward, GARCH-t)", ["run_model_extension.py"], ROOT / "analysis"),
+        ("방향 정확도 사후 점검", ["posthoc_direction_test.py"], ROOT / "analysis")]
 
 
 def main():
