@@ -85,8 +85,9 @@ def ewma_sigma(r1, lam=LAMBDA):
     return pd.Series(np.sqrt(s2), index=r1.index)
 
 
-def intervals(d, fc):
-    """RW 중심 구간: 상수 변동성, EWMA 정규, EWMA conformal. 원점 t의 보정에는 s + H <= t 인 s의 점수만 쓴다."""
+def intervals(d, fc, reg=None):
+    """RW 중심 구간: 상수 변동성, EWMA 정규, EWMA conformal(conf), 변동성 구간별 conformal(confr, reg를 주면).
+    원점 t의 보정에는 s + H <= t 인 s의 점수만 쓴다. confr은 같은 변동성 구간(안정/고변동)의 과거 점수만 쓴다."""
     sig = ewma_sigma(d.r1).reindex(fc.index) * np.sqrt(H)
     idx = fc.index
     y = fc.y.to_numpy()
@@ -98,6 +99,8 @@ def intervals(d, fc):
         out[f"const_hw_{int(lev * 100)}"] = z * const_sd
         out[f"norm_hw_{int(lev * 100)}"] = z * sig.to_numpy()
         hw = np.full(len(idx), np.nan)
+        hwr = np.full(len(idx), np.nan)
+        labels = reg.reindex(idx).to_numpy() if reg is not None else None
         for i in range(len(idx)):
             past = score[max(0, i - H + 1 - CAL_WINDOW): max(i - H + 1, 0)]
             if len(past) < 100:
@@ -105,7 +108,15 @@ def intervals(d, fc):
             k = int(np.ceil((len(past) + 1) * lev))
             q = np.sort(past)[min(k, len(past)) - 1]
             hw[i] = q * sig.iloc[i]
+            if labels is not None:
+                lo = max(0, i - H + 1 - CAL_WINDOW)
+                same = past[labels[lo: max(i - H + 1, 0)] == labels[i]]
+                if len(same) >= 100:
+                    kr = int(np.ceil((len(same) + 1) * lev))
+                    hwr[i] = np.sort(same)[min(kr, len(same)) - 1] * sig.iloc[i]
         out[f"conf_hw_{int(lev * 100)}"] = hw
+        if labels is not None:
+            out[f"confr_hw_{int(lev * 100)}"] = hwr
     return out
 
 

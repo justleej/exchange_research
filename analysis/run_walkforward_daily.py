@@ -48,7 +48,7 @@ def interval_table(iv, reg, label):
     rows = []
     for lev in w.LEVELS:
         tag = int(lev * 100)
-        for method in ("const", "norm", "conf"):
+        for method in ("const", "norm", "conf", "confr"):
             hw = iv[f"{method}_hw_{tag}"]
             ok = hw.notna()
             hit = (iv.y.abs() <= hw)[ok]
@@ -68,7 +68,7 @@ def main():
     fc = w.walk_forward(d)
     reg = w.regimes(d, fc.index)
     r5 = d.r5
-    iv = w.intervals(d, fc)
+    iv = w.intervals(d, fc, reg)
     valid = iv.dropna().index  # 구간 보정 표본이 쌓인 이후 공통 날짜
     fcv, ivv, regv = fc.loc[valid], iv.loc[valid], reg.loc[valid]
 

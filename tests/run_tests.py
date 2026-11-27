@@ -23,7 +23,7 @@ def test_walkforward_ignores_future_data():
     cut = pd.Timestamp("2018-06-29")
     base = w.build_daily_frame()
     fc0 = w.walk_forward(base)
-    iv0 = w.intervals(base, fc0)
+    iv0 = w.intervals(base, fc0, w.regimes(base, fc0.index))
 
     fx = series("exchange_rate/USD_KRW_processed.csv", "USD_KRW")
     sp = series("policy_rate/spread_KOR_USA_processed.csv", "RATE_SPREAD_KOR_USA")
@@ -40,11 +40,11 @@ def test_walkforward_ignores_future_data():
 
     pert = w.build_daily_frame(fx=shake(fx), spread=shake(sp), mmf=shake(mmf))
     fc1 = w.walk_forward(pert)
-    iv1 = w.intervals(pert, fc1)
+    iv1 = w.intervals(pert, fc1, w.regimes(pert, fc1.index))
     idx = fc0.index[fc0.index <= cut]
     for col in ("AR", "A", "B"):
         assert np.allclose(fc0.loc[idx, col], fc1.loc[idx, col]), f"{col} 예측이 미래 자료에 의존한다"
-    for col in ("sigma", "conf_hw_80", "conf_hw_95", "const_hw_80"):
+    for col in ("sigma", "conf_hw_80", "conf_hw_95", "confr_hw_80", "confr_hw_95", "const_hw_80"):
         a, b = iv0.loc[idx, col], iv1.loc[idx, col]
         assert np.allclose(a.fillna(-1), b.fillna(-1)), f"{col} 구간이 미래 자료에 의존한다"
 
