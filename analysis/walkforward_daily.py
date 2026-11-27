@@ -85,10 +85,10 @@ def ewma_sigma(r1, lam=LAMBDA):
     return pd.Series(np.sqrt(s2), index=r1.index)
 
 
-def intervals(d, fc, reg=None):
+def intervals(d, fc, reg=None, sigma=None, lam=LAMBDA, cal_window=CAL_WINDOW):
     """RW 중심 구간: 상수 변동성, EWMA 정규, EWMA conformal(conf), 변동성 구간별 conformal(confr, reg를 주면).
     원점 t의 보정에는 s + H <= t 인 s의 점수만 쓴다. confr은 같은 변동성 구간(안정/고변동)의 과거 점수만 쓴다."""
-    sig = ewma_sigma(d.r1).reindex(fc.index) * np.sqrt(H)
+    sig = (sigma if sigma is not None else ewma_sigma(d.r1, lam).reindex(fc.index) * np.sqrt(H))
     idx = fc.index
     y = fc.y.to_numpy()
     score = np.abs(y) / sig.to_numpy()
@@ -102,14 +102,14 @@ def intervals(d, fc, reg=None):
         hwr = np.full(len(idx), np.nan)
         labels = reg.reindex(idx).to_numpy() if reg is not None else None
         for i in range(len(idx)):
-            past = score[max(0, i - H + 1 - CAL_WINDOW): max(i - H + 1, 0)]
+            past = score[max(0, i - H + 1 - cal_window): max(i - H + 1, 0)]
             if len(past) < 100:
                 continue
             k = int(np.ceil((len(past) + 1) * lev))
             q = np.sort(past)[min(k, len(past)) - 1]
             hw[i] = q * sig.iloc[i]
             if labels is not None:
-                lo = max(0, i - H + 1 - CAL_WINDOW)
+                lo = max(0, i - H + 1 - cal_window)
                 same = past[labels[lo: max(i - H + 1, 0)] == labels[i]]
                 if len(same) >= 100:
                     kr = int(np.ceil((len(same) + 1) * lev))
@@ -125,3 +125,24 @@ def interval_score(y, hw, lev):
     alpha = 1 - lev
     miss = np.maximum(np.abs(y) - hw, 0)
     return 2 * hw + (2 / alpha) * miss
+
+
+def har_sigma(d, index):
+    """HAR형 변동성: 다음 5일 평균 제곱수익률을 [오늘, 5일, 22일 평균 제곱수익률]에 선형 회귀(확장 창, 21일마다 재추정).
+    학습에는 목표가 원점까지 실현된 관측만 쓴다. 5일 수익률의 규모 sigma = sqrt(5 * 예측 일별 분산)."""
+    r2 = d.r1 ** 2
+    X = pd.DataFrame({"a": r2, "b": r2.rolling(5).mean(), "c": r2.rolling(22).mean()})
+    target = r2[::-1].rolling(H).mean()[::-1].shift(-1)  # t+1 ~ t+5 평균 제곱수익률
+    pos = {dt: i for i, dt in enumerate(d.index)}
+    Xv, yv = X.to_numpy(), target.to_numpy()
+    out, beta = {}, None
+    for n, dt in enumerate(index):
+        i = pos[dt]
+        if n % REFIT == 0:
+            m = i - H + 1  # 행 0..i-H의 목표가 i까지 실현됨
+            ok = np.isfinite(Xv[:m]).all(axis=1) & np.isfinite(yv[:m])
+            beta = np.linalg.lstsq(np.column_stack([np.ones(ok.sum()), Xv[:m][ok]]), yv[:m][ok], rcond=None)[0] if ok.sum() > 250 else None
+        if beta is None or not np.isfinite(Xv[i]).all():
+            continue
+        out[dt] = np.sqrt(H * max(beta[0] + Xv[i] @ beta[1:], 1e-10))
+    return pd.Series(out).reindex(index)

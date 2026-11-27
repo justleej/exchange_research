@@ -49,6 +49,20 @@ def test_walkforward_ignores_future_data():
         assert np.allclose(a.fillna(-1), b.fillna(-1)), f"{col} 구간이 미래 자료에 의존한다"
 
 
+def test_har_sigma_is_causal():
+    """HAR 변동성: T 이후 수익률을 바꿔도 T까지의 값은 같아야 한다(학습에 실현된 목표만 쓴다)."""
+    d = w.build_daily_frame()
+    idx = d.index[(d.index >= "2012-01-02") & (d.index <= "2024-12-31")][:: 1]
+    cut = pd.Timestamp("2018-06-29")
+    d2 = d.copy()
+    rng = np.random.default_rng(3)
+    after = d2.index > cut
+    d2.loc[after, "r1"] = d2.loc[after, "r1"] * (1 + rng.normal(0, 0.5, after.sum()))
+    s0, s1 = w.har_sigma(d, idx), w.har_sigma(d2, idx)
+    keep = idx[idx <= cut]
+    assert np.allclose(s0.loc[keep].fillna(-1), s1.loc[keep].fillna(-1)), "HAR 변동성이 미래 수익률에 의존한다"
+
+
 def test_ewma_is_causal():
     r = pd.Series(np.random.default_rng(1).normal(0, 0.01, 400), index=pd.date_range("2020-01-01", periods=400))
     full, part = w.ewma_sigma(r), w.ewma_sigma(r.iloc[:300])
