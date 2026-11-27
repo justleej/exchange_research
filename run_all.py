@@ -3,6 +3,7 @@
 python run_all.py          # 빠른 단계(테스트, walk-forward 평가, 그림): 약 1~2분
 python run_all.py --full   # 검정력, 위기 구간, 월별 지평, 신호 확인, 임계점 확장까지: 수십 분
 LSTM/Hybrid(analysis/run_liquidity_lstm_stationary.py, run_hybrid_time_ordered.py)는 시간이 오래 걸려 포함하지 않는다.
+--full은 data/oos/의 저장된 자료를 쓴다. 자료를 새로 받으려면(네트워크, .env의 ECOS_API_KEY) python data/process_scripts/fetch_oos_2026.py를 먼저 따로 실행한다.
 한 단계가 실패하면 거기서 멈춘다. 각 스크립트는 analysis/에서 실행한다.
 """
 import subprocess
@@ -28,7 +29,11 @@ FULL = [("검정력과 외부 기준 레짐", ["run_power_and_event_regimes.py"]
         ("방향 정확도 사후 점검", ["posthoc_direction_test.py"], ROOT / "analysis"),
         ("Hybrid walk-forward", ["run_hybrid_walkforward.py"], ROOT / "analysis"),
         ("Hybrid 방향 신호 사후 점검", ["run_hybrid_direction_check.py"], ROOT / "analysis"),
-        ("Hybrid MMF 지연 점검", ["run_hybrid_mmf_lag_check.py"], ROOT / "analysis")]
+        ("Hybrid MMF 지연 점검", ["run_hybrid_mmf_lag_check.py"], ROOT / "analysis"),
+        ("표본 밖 Hybrid 예측(약 20분)", ["run_hybrid_oos.py"], ROOT / "analysis"),
+        ("헤지 시뮬레이션", ["run_hedge_simulation.py"], ROOT / "analysis"),
+        ("방향 신호 점검(체결 지연, 새 표본)", ["run_direction_signal_checks.py"], ROOT / "analysis"),
+        ("레짐 정의 점검", ["run_regime_definition.py"], ROOT / "analysis")]
 
 
 def main():

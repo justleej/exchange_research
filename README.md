@@ -738,11 +738,11 @@ pip install -r requirements.txt
 
 ```bash
 python run_all.py          # 테스트(누수, 자료 무결성), walk-forward 평가와 예측구간, 그림: 1~2분
-python run_all.py --full   # 검정력, 월별 지평, 신호 확인, 임계점 확장까지: 수십 분
+python run_all.py --full   # 검정력, 월별 지평, 신호 확인, 임계점 확장, 표본 밖 Hybrid, 헤지, 방향 신호, 레짐 정의까지: 한 시간 이상
 python tests/run_tests.py  # 테스트만 (pytest 없이 실행)
 ```
 
-여러 Python이 설치된 환경에서는 `python -m pip install -r requirements.txt`로 현재 인터프리터에 설치한다. 포털 원본 엑셀(xls)을 CSV로 바꿀 때만 `xlrd`가 필요하고, 분석은 CSV만 읽는다. LSTM과 Hybrid 재현은 오래 걸려 `run_all.py`에 포함하지 않았다.
+여러 Python이 설치된 환경에서는 `python -m pip install -r requirements.txt`로 현재 인터프리터에 설치한다. 포털 원본 엑셀(xls)을 CSV로 바꿀 때만 `xlrd`가 필요하고, 분석은 CSV만 읽는다. 원 캡스톤의 LSTM과 Hybrid 학습(아래 4번)은 오래 걸려 `run_all.py`에 포함하지 않았다. walk-forward Hybrid와 그 후속 점검은 `--full`에 들어 있다.
 
 ### 1. 데이터 전처리
 
@@ -795,6 +795,18 @@ python analysis/LSTM/Hybrid/run_hybrid_m2_demand_deposit.py
 
 ```bash
 python analysis/fx_impact/run_final_fx_impact_pipeline.py
+```
+
+### 6. 표본 밖 검증, 헤지, 방향 신호, 레짐 정의
+
+`run_all.py --full`은 첫 줄(새 자료 받기)을 뺀 나머지를 순서대로 실행한다. 헤지와 방향 신호는 둘째 줄의 결과 파일이 필요하다.
+
+```bash
+python data/process_scripts/fetch_oos_2026.py       # 1. 새 자료(ECOS 키 필요, FRED·Yahoo는 키 없음). data/oos/에 저장본이 있어 생략 가능
+python analysis/run_hybrid_oos.py                   # 2. 2026-03 이후 원점의 Hybrid 예측과 구간: 약 20분
+python analysis/run_hedge_simulation.py             # 3. 헤지 시뮬레이션
+python analysis/run_direction_signal_checks.py      # 4. 방향 신호(체결 지연, 출처, 비용 후 손익, 새 표본)
+python analysis/run_regime_definition.py            # 5. 레짐 정의 비교: 몇 분
 ```
 
 ---
