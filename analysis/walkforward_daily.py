@@ -146,3 +146,46 @@ def har_sigma(d, index):
             continue
         out[dt] = np.sqrt(H * max(beta[0] + Xv[i] @ beta[1:], 1e-10))
     return pd.Series(out).reindex(index)
+
+
+def _garch_nll(params, r):
+    """GARCH(1,1) 정규화 Student-t 음의 로그우도. r은 %단위 수익률."""
+    omega, alpha, beta, nu = params
+    if alpha + beta >= 0.9999:
+        return 1e10
+    n = len(r)
+    s2 = np.empty(n)
+    s2[0] = np.var(r[:50])
+    for t in range(1, n):
+        s2[t] = omega + alpha * r[t - 1] ** 2 + beta * s2[t - 1]
+    z2 = r ** 2 / s2
+    from scipy.special import gammaln
+    ll = (gammaln((nu + 1) / 2) - gammaln(nu / 2) - 0.5 * np.log(np.pi * (nu - 2)) - 0.5 * np.log(s2)
+          - (nu + 1) / 2 * np.log1p(z2 / (nu - 2)))
+    return -ll.sum()
+
+
+def garch_sigma(d, index, refit=252):
+    """GARCH(1,1)-t로 5일 수익률의 규모 sigma를 만든다. 252원점마다 원점까지의 수익률로만 재추정하고,
+    필터는 각 시점에서 과거 수익률만 쓴다. 다기간 분산은 평균 회귀식으로 합산한다."""
+    from scipy.optimize import minimize
+    r = d.r1.to_numpy() * 100
+    pos = {dt: i for i, dt in enumerate(d.index)}
+    out, params, s2 = {}, None, None
+    for n, dt in enumerate(index):
+        i = pos[dt]
+        if n % refit == 0:
+            res = minimize(_garch_nll, x0=[0.02, 0.08, 0.90, 8.0], args=(r[: i + 1],), method="L-BFGS-B",
+                           bounds=[(1e-6, 5), (0, 0.5), (0, 0.999), (2.5, 60)])
+            params = res.x
+            omega, alpha, beta, _ = params
+            s2 = np.empty(len(r))
+            s2[0] = np.var(r[:50])
+            for t in range(1, len(r)):  # 고정 계수로 전 구간 필터(각 시점은 과거 수익률만 사용)
+                s2[t] = omega + alpha * r[t - 1] ** 2 + beta * s2[t - 1]
+        omega, alpha, beta, _ = params
+        nxt = omega + alpha * r[i] ** 2 + beta * s2[i]  # t+1 분산 예측
+        v = omega / max(1 - alpha - beta, 1e-4)
+        var5 = sum(v + (alpha + beta) ** (k - 1) * (nxt - v) for k in range(1, H + 1))
+        out[dt] = np.sqrt(max(var5, 1e-8)) / 100
+    return pd.Series(out).reindex(index)
