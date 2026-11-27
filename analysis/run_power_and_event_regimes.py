@@ -128,13 +128,13 @@ def main():
     for name, g in sets.items():
         d = ch.assign(grp=g).dropna(subset=["grp"])
         run_set(name, d, (0, 1), {"M2 -> FX": ("fx", "m2"), "FX -> M2": ("m2", "fx")}, rng, rows, prow)
-    # 일별 MMF -> 환율. 짧은 계열(2015-12~)과 freesis에서 받은 긴 계열(2006-04~)을 모두 검정한다.
+    # 일별 MMF -> 환율. 짧은 계열(기존 파일, 2010-12~)과 freesis에서 받은 긴 계열(2006-04~)을 모두 검정한다.
     fx = series("exchange_rate/USD_KRW_processed.csv", "USD_KRW")
     short = lstm_inputs(fx).mmf
     long_ = pd.read_csv(DATA / "m2/KOR/MMF/MMF_daily_2006_2026.csv", skiprows=4, header=None, usecols=[0, 1],
                         names=["date", "mmf"], thousands=",")
     long_ = long_.assign(date=pd.to_datetime(long_.date, format="%Y/%m/%d")).set_index("date").mmf.sort_index() / 10  # 억원 -> 십억원
-    for label, mmf in (("2015-12~", short), ("2006-04~", long_)):
+    for label, mmf in (("2010-12~", short), ("2006-04~", long_)):
         dd = pd.DataFrame({"fx": np.log(fx), "mmf": np.log(mmf)}).dropna().diff().dropna()
         dd.index.name = "date"
         dsets = {f"일별 MMF({label}) 전체": pd.Series(0.0, index=dd.index),
