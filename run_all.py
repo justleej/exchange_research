@@ -25,7 +25,10 @@ FULL = [("검정력과 외부 기준 레짐", ["run_power_and_event_regimes.py"]
         ("신호 구조변화와 메커니즘", ["run_signal_extra_checks.py"], ROOT / "analysis"),
         ("교차통화 복제", ["run_cross_currency.py"], ROOT / "analysis"),
         ("모델 확장(walk-forward, GARCH-t)", ["run_model_extension.py"], ROOT / "analysis"),
-        ("방향 정확도 사후 점검", ["posthoc_direction_test.py"], ROOT / "analysis")]
+        ("방향 정확도 사후 점검", ["posthoc_direction_test.py"], ROOT / "analysis"),
+        ("Hybrid walk-forward", ["run_hybrid_walkforward.py"], ROOT / "analysis"),
+        ("Hybrid 방향 신호 사후 점검", ["run_hybrid_direction_check.py"], ROOT / "analysis"),
+        ("Hybrid MMF 지연 점검", ["run_hybrid_mmf_lag_check.py"], ROOT / "analysis")]
 
 
 def main():
