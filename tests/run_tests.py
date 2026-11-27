@@ -151,8 +151,32 @@ def test_data_integrity():
         assert len(j) > 2000 and rel < 1e-4, f"CMA 새 자료와 기존 자료가 다르다(상대 오차 {rel:.2e})"
 
 
+def slow_hybrid_walkforward_ignores_future_data():
+    """Hybrid walk-forward(--slow): 앞쪽 2블록에서 원점 T 이후 자료를 흔들어도 T까지의 예측이 같아야 한다(약 3~5분)."""
+    import run_hybrid_walkforward as h
+
+    d0 = w.build_daily_frame()
+    fc = w.walk_forward(d0)
+    d = h.add_daily_features(d0)
+    origins = np.array([d.index.get_loc(t) for t in fc.index if t in d.index])
+    nb = 2
+    cut_pos = origins[nb * h.REFIT - 1]
+    cut = d.index[cut_pos]
+    p0 = h.hybrid_predictions(d, origins, max_blocks=nb)
+    d2 = d.copy()
+    rng = np.random.default_rng(5)
+    after = d2.index > cut
+    for col in ("r1", "ds1", "dm1", "y"):
+        d2.loc[after, col] = d2.loc[after, col] * (1 + rng.normal(0, 0.5, after.sum()))
+    p1 = h.hybrid_predictions(d2, origins, max_blocks=nb)
+    idx = p0.index[p0.index <= cut]
+    for col in p0.columns:
+        assert np.allclose(p0.loc[idx, col], p1.loc[idx, col], rtol=1e-4, atol=1e-6), f"{col} 예측이 미래 자료에 의존한다"
+
+
 def main():
-    tests = [(k, v) for k, v in globals().items() if k.startswith("test_") and callable(v)]
+    slow = "--slow" in sys.argv  # 오래 걸리는 점검은 --slow일 때만
+    tests = [(k, v) for k, v in globals().items() if callable(v) and (k.startswith("test_") or (slow and k.startswith("slow_")))]
     failed = 0
     for name, fn in tests:
         try:
