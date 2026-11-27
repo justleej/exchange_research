@@ -1,0 +1,6 @@
+regime,n,n_pre,cov_all,score_pre,score_new,min_regime_cov,regime_cov,share,diff_vs_R0_pre,ci_lo,ci_hi,p_holm,diff_vs_R0_new,H10a,H10b,adopt
+R0 현행,3261,3104,0.9473,0.05608,0.06634,0.9466,"{'cov_고변동': np.float64(0.95), 'cov_안정': np.float64(0.947)}","{'고변동': np.float64(0.2), '안정': np.float64(0.8)}",,,,,,False,True,False
+R1 3구간,3261,3104,0.9451,0.05562,0.06338,0.9391,"{'cov_고': np.float64(0.944), 'cov_저': np.float64(0.939), 'cov_중': np.float64(0.949)}","{'고': np.float64(0.21), '저': np.float64(0.29), '중': np.float64(0.5)}",-0.0004608,-0.001615,0.0006444,1,-0.002961,False,True,False
+R2 EWMA,3261,3104,0.9488,0.05568,0.06359,0.9465,"{'cov_고변동': np.float64(0.958), 'cov_안정': np.float64(0.947)}","{'고변동': np.float64(0.2), '안정': np.float64(0.8)}",-0.0003947,-0.0009766,4.224e-05,0.336,-0.002746,False,True,False
+R3 60일,3261,3104,0.9482,0.05573,0.06952,0.946,"{'cov_고변동': np.float64(0.946), 'cov_안정': np.float64(0.949)}","{'고변동': np.float64(0.21), '안정': np.float64(0.79)}",-0.000341,-0.001306,0.000589,1,0.003182,False,True,False
+R4 HMM,3261,3104,0.9463,0.05568,0.07019,0.9463,{'cov_안정': np.float64(0.946)},{'안정': np.float64(1.0)},-0.0003929,-0.001077,0.0004123,1,0.003852,False,True,False

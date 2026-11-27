@@ -225,8 +225,24 @@ def slow_hybrid_walkforward_ignores_future_data():
         assert np.allclose(p0.loc[idx, col], p1.loc[idx, col], rtol=1e-4, atol=1e-6), f"{col} 예측이 미래 자료에 의존한다"
 
 
+def test_regime_labels_are_causal():
+    """R0~R3 레짐 라벨은 원점 이후 수익률을 바꿔도 이전 값이 같다(HMM은 구성상 필터링 확률이라 느려서 제외)."""
+    import run_regime_definition as rd
+
+    rng = np.random.default_rng(7)
+    idx = pd.date_range("2010-01-01", periods=1200, freq="B")
+    r1 = pd.Series(rng.normal(0, 0.005, 1200), index=idx)
+    d = pd.DataFrame({"r1": r1, "vol20": r1.rolling(20).std()})
+    d2 = d.copy()
+    d2.iloc[800:, 0] *= 5
+    d2["vol20"] = d2.r1.rolling(20).std()
+    for f in (rd.r0, rd.r1, rd.r2, rd.r3):
+        a, b = f(d).iloc[:800], f(d2).iloc[:800]
+        assert (a.fillna("-") == b.fillna("-")).all(), f"{f.__name__} 라벨이 미래 값에 의존한다"
+
+
 def main():
-    slow = "--slow" in sys.argv  # 오래 걸리는 점검은 --slow일 때만
+    slow ="--slow" in sys.argv  # 오래 걸리는 점검은 --slow일 때만
     tests = [(k, v) for k, v in globals().items() if callable(v) and (k.startswith("test_") or (slow and k.startswith("slow_")))]
     failed = 0
     for name, fn in tests:
